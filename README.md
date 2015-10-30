@@ -8,7 +8,11 @@ Design hosted at Upverter (https://upverter.com/Densaugeo/e57f98326df41691/Selen
 
 Schematic:
 
-![Dev Board OHSPark render (bottom)](https://raw.githubusercontent.com/Densaugeo/Selene/master/Dev%20Board%20OSHPark%20%28bottom%29.png)
+![Dev Board Schematic](/Dev%20Board%20Schematic.png?raw=true)
+
+PCB Layout:
+
+![Dev Board OHSPark render (bottom)](/Dev%20Board%20OSHPark%20%28bottom%29.png?raw=true)
 
 ![Dev Board OHSPark render (top)](/Dev%20Board%20OSHPark%20%28top%29.png?raw=true)
 
