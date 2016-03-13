@@ -4,45 +4,44 @@
 
 At μC:
 
-|Type               |Response|
-|:-----------------:|:-------|
-|Connect\|Disconnect|Do nothing|
-|Query              |Reply with info/name/state|
-|Info\|Name\|State  |Set given property|
+|Type                 |Response|
+|:-------------------:|:-------|
+|Connect \| Disconnect|Do nothing|
+|Query                |Reply with info/name/state|
+|Info \| Name \| State|Set given property|
 
 μCs should generate state packets whenever their state changes, even if not requested by another packet (such as by a hardware control).
 
 At relay:
 
-|Type               |From  |Response|
-|:-----------------:|:----:|:-------|
-|Any                |μC    |Echo to servers|
-|Any                |Server|Echo to μCs|
+|Type|From  |Response|
+|:--:|:----:|:-------|
+|Any |μC    |Echo to servers|
+|Any |Server|Echo to μCs|
 
 When a relay detects a new μC heartbeat, it should query the μC for its address and send a Connect packet. When the heartbeat fails, it should send a Disconnect packet. When the relay connects to a server, it should send Connect packets for all currently connected μCs.
 
 At server:
 
-|Type               |From  |Response|
-|:-----------------:|:----:|:-------|
-|Connect            |Relay |Add new μC, echo to clients, send Queries back|
-|Disconnect         |Relay |Remove μC, echo to clients|
-|Connect\|Disconnect|Client|Do nothing|
-|Query              |Relay |Reply with info/name/state from cache|
-|Query              |Client|Reply with info/name/state from cache|
-|Info\|Name\|State  |Relay |Update cache, echo to clients if changed|
-|Info\|Name\|State  |Client|Echo to relay if different from cache|
+|Type                 |From  |Response|
+|:-------------------:|:----:|:-------|
+|Connect              |Relay |Add new μC, echo to clients, send Queries back|
+|Disconnect           |Relay |Remove μC, echo to clients|
+|Connect \| Disconnect|Client|Do nothing|
+|Query                |Any   |Reply with info/name/state from cache|
+|Info \| Name \| State|Relay |Update cache, echo to clients if changed|
+|Info \| Name \| State|Client|Echo to relay if different from cache|
 
 When a client connects to a server, the server should send Connect packets for all currently connected μCs.
 
 At client:
 
-|Type               |Response|
-|:-----------------:|:-------|
-|Connect            |Add new μC|
-|Disconnect         |Remove μC|
-|Query              |Reply with info/name/state from cache|
-|Info\|Name\|State  |Update cache|
+|Type                 |Response|
+|:-------------------:|:-------|
+|Connect              |Add new μC|
+|Disconnect           |Remove μC|
+|Query                |Reply with info/name/state from cache|
+|Info \| Name \| State|Update cache|
 
 Clients should create Info/Name/State packets to control the μC.
 
