@@ -49,12 +49,11 @@ Packet {
 }
 
 enum TypeCode {
-  Connect = 0,
-  Disconnect = 1,
-  Query = 2,
-  Info = 3,
-  Name = 4,
-  State = 5,
+  Heartbeat = 0,
+  Query = 1,
+  Info = 2,
+  Name = 3,
+  State = 4,
 }
 
 enum Payload {
