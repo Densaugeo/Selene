@@ -1,6 +1,0 @@
-<title>ESP-8266</title>
-<body style="background:#000;color:#F00">
-<input type="range" min="-1023" max="1023" value="0" orient="vertical" style="height:100%;float:left" onchange="x=new XMLHttpRequest();x.open('POST','1='+this.value);x.send()">
-<input type="range" min="-1023" max="1023" value="0" orient="vertical" style="height:100%;float:right" onchange="x=new XMLHttpRequest();x.open('POST','2='+this.value);x.send()">
-<h1 style="float:left" onclick="x=new XMLHttpRequest();x.open('POST','1=0');x.send()">Stop</h1>
-<h1 style="float:right" onclick="x=new XMLHttpRequest();x.open('POST','2=0');x.send()">Stop</h1>
