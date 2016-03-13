@@ -1,0 +1,35 @@
+{
+  "name": "selene",
+  "version": "0.0.0",
+  "description": "???",
+  "keywords": [
+    "arduino"
+  ],
+  "homepage": "https://github.com/Densaugeo/Selene",
+  "bugs": "https://github.com/Densaugeo/Selene/issues",
+  "license": "LGPL-2.1+",
+  "author": "Densaugeo (http://www.madengineersworkshop.net/)",
+  "contributors": [],
+  "files": [
+    "http",
+    "LICENSE",
+    "package.json",
+    "packets.md",
+    "README.md",
+    "relay.js",
+    "server.js"
+  ],
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Densaugeo/Selene.git"
+  },
+  "scripts": {},
+  "config": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=4.2.1",
+    "npm": ">=2.14.7"
+  }
+}
