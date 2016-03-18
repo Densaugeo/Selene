@@ -56,13 +56,6 @@ var logger = new winston.Logger({
 
 var ws_to_server = new persistent_ws(nconf.get('remoteURL'), undefined, {verbose: true, maxRetryTime: 30000, logger: logger.info});
 
-// ws_to_server.send('foo');
-
-ws_to_server.addEventListener('open', function() {
-  // Just a small test
-  ws_to_server.send(Buffer([1,2,3,4,5]));
-});
-
 // ws library doesn't emit a close event when it errors while connecting
 ws_to_server.onerror = function(e) {
   if(e.syscall === 'connect') {
@@ -87,7 +80,11 @@ var skirnir = new skirnir({dir: '/dev', autoscan: true, autoadd: true, baud: nco
 skirnir.on('message', function(e) {
   logger.debug('Received from' + e.device + ': ' + util.inspect(new Buffer(e.data)));
   
-  ws_to_server.send(new Buffer(e.data));
+  if(ws_to_server.readyState === ws_to_server.OPEN) {
+    ws_to_server.send(new Buffer(e.data));
+  } else {
+    logger.debug('No WebSocket connection, packet not sent');
+  }
 });
 
 // Rest of these are just for logging
