@@ -26,7 +26,13 @@
   },
   "scripts": {},
   "config": {},
-  "dependencies": {},
+  "dependencies": {
+    "nconf": "^0.8.4",
+    "persistent-ws": "~1.0.3",
+    "skirnir": "git://github.com/Densaugeo/Skirnir.git#0.1.2",
+    "winston": "^2.2.0",
+    "ws": "~1.0.1"
+  },
   "devDependencies": {},
   "engines": {
     "node": ">=4.2.1",
