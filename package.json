@@ -24,14 +24,24 @@
     "type": "git",
     "url": "https://github.com/Densaugeo/Selene.git"
   },
-  "scripts": {},
+  "scripts": {
+    "install": "npm run install-font-awesome && npm run install-hematite && npm run build-client",
+    "install-font-awesome": "rm -rf http/node_modules/font-awesome && mv node_modules/font-awesome http/node_modules",
+    "install-hematite": "rm -rf http/node_modules/hematite && mv node_modules/hematite http/node_modules",
+    "lint": "jshint *.js http/*.js",
+    "build-client": "browserify http/libs.js > http/libs.pkgd.js"
+  },
   "config": {},
   "dependencies": {
-    "nconf": "^0.8.4",
-    "persistent-ws": "~1.0.3",
+    "browserify": "^13.0.0",
+    "font-awesome": "^4.6.1",
+    "hematite": "git+https://git@github.com/Densaugeo/Hematite.git#2.1.0",
+    "mosca": "^1.2.0",
+    "mqtt": "~1.9.0",
+    "nconf": "~0.8.4",
+    "node-static": "~0.7.7",
     "skirnir": "git://github.com/Densaugeo/Skirnir.git#0.1.2",
-    "winston": "^2.2.0",
-    "ws": "~1.0.1"
+    "winston": "~2.2.0"
   },
   "devDependencies": {},
   "engines": {

@@ -1,14 +1,14 @@
 process.title = 'selene-relay';
 
+var mqtt = require('mqtt');
 var nconf = require('nconf');
 var repl = require('repl');
 var skirnir = require('skirnir');
 var util = require('util');
 var winston = require('winston');
-var ws = require('ws');
 
-global.WebSocket = ws; // Supply WebSocket global for client-side persistent-ws library
-var persistent_ws = require('persistent-ws');
+// Testing
+var SeleneParsers = require('./SeleneParsers.js');
 
 //////////////
 // Settings //
@@ -16,7 +16,7 @@ var persistent_ws = require('persistent-ws');
 
 nconf.argv().env();
 
-nconf.file(__dirname + '/config.json');
+nconf.file(__dirname + '/relay_config.json');
 
 nconf.defaults({
   remoteURL: 'ws://localhost:8088/',
@@ -24,9 +24,9 @@ nconf.defaults({
   silent: false,
   logLevelConsole: 'info',
   logLevelFile: 'info',
-  logFile: __dirname + 'relay.log',
+  logFile: __dirname + '/relay.log',
   logFileSize: 100*1024,
-  reple: false
+  repl: false
 });
 
 var logger = new winston.Logger({
@@ -54,21 +54,56 @@ var logger = new winston.Logger({
 // Connection to server //
 //////////////////////////
 
-var ws_to_server = new persistent_ws(nconf.get('remoteURL'), undefined, {verbose: true, maxRetryTime: 30000, logger: logger.info});
-
-// ws library doesn't emit a close event when it errors while connecting
-ws_to_server.onerror = function(e) {
-  if(e.syscall === 'connect') {
-    ws_to_server.socket.emit('close');
+var mqtt_to_server = mqtt.connect('mqtt://localhost:1883', {
+  queueQoSZero: false,
+  will: {
+    topic: 'Se/1/connection',
+    payload: Buffer([0]),
+    retain: true
   }
+});
+
+logger.info('Connecting to mqtt://localhost:1883...');
+
+var info = {
+  name: 'Selene One',
+  description: 'Very first Selene device'
 }
 
-// All packets received from WebSocket are sent through Skirnir
-ws_to_server.onmessage = function(e) {
-  logger.debug('Received from WebSocket: ' + util.inspect(e.data));
-  
-  skirnir.broadcast(new Buffer(e.data));
+var pin_0_info = {
+  name: 'LED Select',
+  description: 'Does exactly what it sounds like',
+  min: 0,
+  max: 2
 }
+
+mqtt_to_server.on('connect', function() {
+  logger.info('Connected to mqtt://localhost:1883');
+  
+  mqtt_to_server.publish('Se/1/connection', Buffer([1]), { retain: true, qos: 0 });
+  mqtt_to_server.publish('Se/1/devinfo', JSON.stringify(info), { retain: true, qos: 0  });
+  mqtt_to_server.publish('Se/1/pin/0', Buffer([0]), { retain: true, qos: 0  });
+  mqtt_to_server.publish('Se/1/pininfo/0', JSON.stringify(pin_0_info), { retain: true, qos: 0  });
+});
+
+mqtt_to_server.on('error', e => logger.error('MQTT client error:', e.toString()));
+
+mqtt_to_server.on('message', function(topic, message) {
+  logger.debug('MQTT received:', { topic: topic, message: message });
+  
+  var buffer = SeleneParsers.fromMQTTToBuffer(topic, message);
+  
+  if(buffer !== null) {
+    skirnir.broadcast(buffer);
+    
+    logger.debug('Skirnir sent:', util.inspect(buffer));
+  } else {
+    logger.debug('Packet from MQTT was invalid');
+  }
+  
+});
+
+mqtt_to_server.subscribe('Se/1/pinreq/+');
 
 ///////////////////////
 // Connection to μCs //
@@ -78,35 +113,31 @@ var skirnir = new skirnir({dir: '/dev', autoscan: true, autoadd: true, baud: nco
 
 // All packets received from Skirnir are sent through the WebSocket
 skirnir.on('message', function(e) {
-  logger.debug('Received from' + e.device + ': ' + util.inspect(new Buffer(e.data)));
+  logger.debug('Received from ' + e.device + ': ' + util.inspect(new Buffer(e.data)));
   
-  if(ws_to_server.readyState === ws_to_server.OPEN) {
-    ws_to_server.send(new Buffer(e.data));
-  } else {
-    logger.debug('No WebSocket connection, packet not sent');
+  // If we have a Selene message
+  var mqtt_message = SeleneParsers.fromBufferToMQTT(new Buffer(e.data));
+  
+  if(mqtt_message !== null) {
+    mqtt_to_server.publish(mqtt_message[0], mqtt_message[1], { retain: true, qos: 0 });
+    
+    logger.debug('Sent to MQTT:', { topic: mqtt_message[0], message: util.inspect(mqtt_message[1]) });
   }
 });
 
-// Rest of these are just for logging
-skirnir.on('add', function(e) {
-  logger.info('Added new serial device: ' + e.device);
-});
-
-skirnir.on('remove', function(e) {
-  logger.info('Removed serial device: ' + e.device);
-});
-
-skirnir.on('connect', function(e) {
+skirnir.on('connect', e => {
   logger.info('Connected device ' + e.device);
+  
+  skirnir.connections[e.device].send(SeleneParsers.makeDiscoveryPacket(0xFFFFFFFF));
+  
+  logger.debug('Skirnir sent to ' + e.device + ':', util.inspect(buffer));
 });
 
-skirnir.on('disconnect', function(e) {
-  logger.info('Disconnected device ' + e.device);
-});
-
-skirnir.on('error', function(e) {
-  logger.error('Error event from ' + e.call + ': ' + e.error);
-});
+// Rest of these are just for logging
+skirnir.on('add'       , e => logger.info('Added new serial device: ' + e.device));
+skirnir.on('remove'    , e => logger.info('Removed serial device: '   + e.device));
+skirnir.on('disconnect', e => logger.info('Disconnected device '      + e.device));
+skirnir.on('error'     , e => logger.error('Error event from ' + e.call + ': ' + e.error));
 
 //////////
 // REPL //
@@ -123,5 +154,5 @@ if(nconf.get('repl')) {
   cli.context.ws                 = ws;
   cli.context.persistent_ws      = persistent_ws;
   
-  cli.context.ws_to_server       = ws_to_server;
+//   cli.context.ws_to_server       = ws_to_server;
 }
