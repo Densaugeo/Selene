@@ -31,11 +31,11 @@ var string_32 = {
   coerce: v => String(v),
   pack: (buffer, v, offset) => {
     var len = buffer.write(v, offset + 1, 32, 'utf8');
-    buffer.writeUInt8(len, offset);
+    return buffer.writeUInt8(len, offset);
   },
   unpack: (buffer, offset) => {
     var len = buffer.readUInt8(offset);
-    buffer.toString('utf8', offset + 1, offset + len + 1);
+    return buffer.toString('utf8', offset + 1, offset + len + 1);
   }
 }
 
@@ -84,7 +84,7 @@ SeleneParsers.TYPES = {
   1: SeleneParsers.Pinreq,
   2: SeleneParsers.Pininfo,
   3: SeleneParsers.Devinfo,
-  4: SeleneParsers.Connection
+  4: SeleneParsers.Connection,
   5: SeleneParsers.Discovery
 }
 
@@ -97,7 +97,7 @@ for(var i in SeleneParsers.TYPES) {
 }
 
 // @method Buffer makeDiscoveryPacket(Number address) -- Make a Buffer-format discovery packet. Use 0xFFFFFFFF to call all addresses
-SeleneParsers.makeDiscoveryPacket(address) {
+SeleneParsers.makeDiscoveryPacket = function(address) {
   var buffer = new Buffer(45).fill(0);
   
   buffer.writeUInt8(83, 0); // Prefix - 'S'
@@ -105,6 +105,16 @@ SeleneParsers.makeDiscoveryPacket(address) {
   buffer.writeUInt8(SeleneParsers.Discovery.typeCode, 5);
   
   return buffer;
+}
+
+// @method Number getAddressFromBuffer(Buffer buffer) -- Does what it says
+SeleneParsers.getAddressFromBuffer = function(buffer) {
+  return buffer.readUInt32LE(1);
+}
+
+// @method Number getTypeCodeFromBuffer(Buffer buffer) -- Does what it says
+SeleneParsers.getTypeCodeFromBuffer = function(buffer) {
+  return buffer.readUInt8(5);
 }
 
 // @method Buffer fromMQTTToBuffer(String topic, String message) -- Moves Selene packet from an MQTT topic+message to a Buffer

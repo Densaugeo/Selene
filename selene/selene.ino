@@ -11,6 +11,9 @@ int pb_time = 0;
 int virtual_pin = 0;
 #define PINS 0
 #define PINREQ 1
+#define PININFO 2
+#define DEVINFO 3
+#define DISCOVERY 5
 #define VALUE 0
 
 void setup() {
@@ -45,19 +48,30 @@ void loop() {
   
   // Returns true if a valid packet is found
   if(a_skirnir.receive_until_packet(packet_decoded)) {
-    if(packet_decoded[0] == 'S' && packet_decoded[1] == 1) {
-      switch(packet_decoded[5]) {
-        case PINREQ:
-          if(packet_decoded[6] == 0 && packet_decoded[11] <= 2) {
-            digitalWrite(virtual_pin + 2, LOW);
-            virtual_pin = packet_decoded[11];
-            digitalWrite(virtual_pin + 2, HIGH);
+    if(packet_decoded[0] == 'S') {
+      if(packet_decoded[1] == 1 || packet_decoded[1] == 255) {
+        switch(packet_decoded[5]) {
+          case PINREQ:
+            if(packet_decoded[6] == 0 && packet_decoded[11] <= 2) {
+              digitalWrite(virtual_pin + 2, LOW);
+              virtual_pin = packet_decoded[11];
+              digitalWrite(virtual_pin + 2, HIGH);
 
-            // Notify higher-level PC
-            uint8_t pin_update[] = {'S', 1, 0, 0, 0, PINS, 0, virtual_pin};
-            a_skirnir.send(pin_update, 8);
-          }
-          break;
+              // Notify higher-level PC
+              uint8_t pin_update[] = {'S', 1, 0, 0, 0, PINS, 0, 0, 0, 0, 0, virtual_pin};
+              a_skirnir.send(pin_update, 12);
+            }
+            break;
+          case DISCOVERY:
+            // Send devinfo packet
+            uint8_t devinfo_packet[] = {'S', 1, 0, 0, 0, DEVINFO, 0, 0, 0, 0, 0, 21, '{', '"', 'n', 'a', 'm', 'e', '"', ':', '"', 'S', 'e', 'l', 'e', 'n', 'e', ' ', 'O', 'n', 'e', '"', '}'};
+            a_skirnir.send(devinfo_packet, 33);
+
+            // And send a pininfo packet
+            uint8_t pininfo_packet[] = {'S', 1, 0, 0, 0, PININFO, 0, 0, 0, 0, 0, 31, '{', '"', 'n', 'a', 'm', 'e', '"', ':', '"', 'L', 'E', 'D', '#', '"', ',', '"', 'm', 'i', 'n', '"', ':', '0', ',', '"', 'm', 'a', 'x', '"', ':', '2', '}'};
+            a_skirnir.send(pininfo_packet, 43);
+            break;
+        }
       }
     }
   }

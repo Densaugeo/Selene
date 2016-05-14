@@ -54,21 +54,8 @@ var logger = new winston.Logger({
 // Connection to server //
 //////////////////////////
 
-var mqtt_to_server = mqtt.connect('mqtt://localhost:1883', {
-  queueQoSZero: false,
-  will: {
-    topic: 'Se/1/connection',
-    payload: Buffer([0]),
-    retain: true
-  }
-});
-
-logger.info('Connecting to mqtt://localhost:1883...');
-
-var info = {
-  name: 'Selene One',
-  description: 'Very first Selene device'
-}
+var mqtts = {};
+var mqtt_caches = {};
 
 var pin_0_info = {
   name: 'LED Select',
@@ -77,18 +64,42 @@ var pin_0_info = {
   max: 2
 }
 
-mqtt_to_server.on('connect', function() {
-  logger.info('Connected to mqtt://localhost:1883');
+var start_mqtt = function(address, cache) {
+  var mqtt_to_server = mqtt.connect('mqtt://localhost:1883', {
+    queueQoSZero: false,
+    will: {
+      topic: 'Se/' + address + '/connection',
+      payload: Buffer([0]),
+      retain: true
+    }
+  });
   
-  mqtt_to_server.publish('Se/1/connection', Buffer([1]), { retain: true, qos: 0 });
-  mqtt_to_server.publish('Se/1/devinfo', JSON.stringify(info), { retain: true, qos: 0  });
-  mqtt_to_server.publish('Se/1/pin/0', Buffer([0]), { retain: true, qos: 0  });
-  mqtt_to_server.publish('Se/1/pininfo/0', JSON.stringify(pin_0_info), { retain: true, qos: 0  });
-});
+  logger.info('Connecting to mqtt://localhost:1883...');
+  
+  mqtt_to_server.on('connect', function() {
+    logger.info('Connected to mqtt://localhost:1883');
+    
+    mqtt_to_server.publish('Se/' + address + '/connection', Buffer([1]), { retain: true, qos: 0 });
+    
+    logger.debug('Sent to MQTT:', { topic: 'Se/' + address + '/connection', message: Buffer([1]) });
+    
+    mqtt_to_server.subscribe('Se/' + address + '/pinreq/+');
+    
+    for(var i in cache) {
+      mqtt_to_server.publish(cache[i][0], cache[i][1], { retain: true, qos: 0 });
+      
+      logger.debug('Sent to MQTT:', { topic: cache[i][0], message: cache[i][1] });
+    }
+  });
+  
+  mqtt_to_server.on('error', e => logger.error('MQTT client error:', e.toString()));
+  
+  mqtt_to_server.on('message', onmessage);
+  
+  return mqtt_to_server;
+}
 
-mqtt_to_server.on('error', e => logger.error('MQTT client error:', e.toString()));
-
-mqtt_to_server.on('message', function(topic, message) {
+var onmessage = function(topic, message) {
   logger.debug('MQTT received:', { topic: topic, message: message });
   
   var buffer = SeleneParsers.fromMQTTToBuffer(topic, message);
@@ -100,10 +111,7 @@ mqtt_to_server.on('message', function(topic, message) {
   } else {
     logger.debug('Packet from MQTT was invalid');
   }
-  
-});
-
-mqtt_to_server.subscribe('Se/1/pinreq/+');
+}
 
 ///////////////////////
 // Connection to μCs //
@@ -113,24 +121,39 @@ var skirnir = new skirnir({dir: '/dev', autoscan: true, autoadd: true, baud: nco
 
 // All packets received from Skirnir are sent through the WebSocket
 skirnir.on('message', function(e) {
-  logger.debug('Received from ' + e.device + ': ' + util.inspect(new Buffer(e.data)));
+  var buffer = new Buffer(e.data);
+  
+  logger.debug('Received from ' + e.device + ': ' + util.inspect(buffer));
   
   // If we have a Selene message
-  var mqtt_message = SeleneParsers.fromBufferToMQTT(new Buffer(e.data));
+  var mqtt_message = SeleneParsers.fromBufferToMQTT(buffer);
   
   if(mqtt_message !== null) {
-    mqtt_to_server.publish(mqtt_message[0], mqtt_message[1], { retain: true, qos: 0 });
+    if(mqtt_caches[e.device] === undefined) {
+      mqtt_caches[e.device] = {};
+    }
     
-    logger.debug('Sent to MQTT:', { topic: mqtt_message[0], message: util.inspect(mqtt_message[1]) });
+    var typeCode = SeleneParsers.getTypeCodeFromBuffer(buffer);
+    mqtt_caches[e.device][typeCode] = mqtt_message;
+    
+    if(mqtts[e.device] === undefined) {
+      var address = SeleneParsers.getAddressFromBuffer(buffer);
+      mqtts[e.device] = start_mqtt(address, mqtt_caches[e.device]);
+    } else {
+      mqtts[e.device].publish(mqtt_message[0], mqtt_message[1], { retain: true, qos: 0 });
+      
+      logger.debug('Sent to MQTT:', { topic: mqtt_message[0], message: mqtt_message[1] });
+    }
   }
 });
 
 skirnir.on('connect', e => {
   logger.info('Connected device ' + e.device);
   
-  skirnir.connections[e.device].send(SeleneParsers.makeDiscoveryPacket(0xFFFFFFFF));
+  var discovery_packet = SeleneParsers.makeDiscoveryPacket(0xFFFFFFFF);
+  skirnir.connections[e.device].send(discovery_packet);
   
-  logger.debug('Skirnir sent to ' + e.device + ':', util.inspect(buffer));
+  logger.debug('Skirnir sent to ' + e.device + ':', util.inspect(discovery_packet));
 });
 
 // Rest of these are just for logging
@@ -151,8 +174,5 @@ if(nconf.get('repl')) {
   cli.context.skirnir            = skirnir;
   cli.context.util               = util;
   cli.context.winston            = winston;
-  cli.context.ws                 = ws;
-  cli.context.persistent_ws      = persistent_ws;
-  
-//   cli.context.ws_to_server       = ws_to_server;
+  cli.context.SeleneParsers      = SeleneParsers;
 }
