@@ -29,13 +29,15 @@
     "install-font-awesome": "rm -rf http/node_modules/font-awesome && mv node_modules/font-awesome http/node_modules",
     "install-hematite": "rm -rf http/node_modules/hematite && mv node_modules/hematite http/node_modules",
     "lint": "jshint *.js http/*.js",
-    "build-client": "browserify http/libs.js > http/libs.pkgd.js"
+    "build-client": "browserify http/libs.js > http/libs.pkgd.js",
+    "test": "mocha test/SeleneParser.js"
   },
   "config": {},
   "dependencies": {
     "browserify": "^13.0.0",
     "font-awesome": "^4.6.1",
     "hematite": "git+https://git@github.com/Densaugeo/Hematite.git#2.1.0",
+    "mocha": "^2.4.5",
     "mosca": "^1.2.0",
     "mqtt": "~1.9.0",
     "nconf": "~0.8.4",

@@ -143,9 +143,7 @@ if(nconf.get('repl')) {
   cli.context.repl               = repl;
   cli.context.util               = util;
   cli.context.winston            = winston;
-  cli.context.ws                 = ws;
   
   cli.context.http_server = http_server;
-//   cli.context.ws_to_relays = ws_to_relays;
   cli.context.logger = logger;
 }

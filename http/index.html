@@ -186,46 +186,24 @@ var darkColors = document.getElementById('dark_colors');
  */
 var mqtt_to_server = mqtt.connect('ws://localhost:8883');
 
-mqtt_to_server.subscribe('Se/+/devinfo');
+var subscriptions = ['Se/+/devinfo'];
+
+mqtt_to_server.on('connect', function() {
+  subscriptions.forEach(function(v) {
+    mqtt_to_server.subscribe(v);
+  });
+});
 
 mqtt_to_server.on('message', function(topic, message) {
-  var topic_tree = topic.split('/');
-  
-  if(topic_tree[0] !== 'Se') {
-    return;
-  }
-  
-  var event = { address: Number(topic_tree[1]) };
-  
-  switch(topic_tree[2]) {
-    // @event deviceinfo { String type, Number address, Object info }
-    case 'devinfo':
-      event.type = 'deviceinfo';
-      var info = JSON.parse(message.toString())
-      event.info = { name: String(info.name), description: String(info.description) };
-      break;
-    // @event deviceconnection { String type, Number address, Boolean connected }
-    case 'connection':
-      event.type = 'deviceconnection';
-      event.connected = Boolean(message[0]);
-      break;
-    // @event pinvalue { String type, Number address, Number pin, Number value }
-    case 'pin':
-      event.type = 'pinvalue';
-      event.pin = Number(topic_tree[3]);
-      event.value = Number(message);
-      break;
-    // @event pininfo { String type, Number address, Number pin, Object info }
-    case 'pininfo':
-      event.type = 'pininfo';
-      event.pin = Number(topic_tree[3]);
-      var info = JSON.parse(message.toString());
-      event.info = { name: String(info.name), description: String(info.description), min: Number(info.min), max: Number(info.max) };
-      break;
-  }
+  var event = SeleneParser.Packet.fromMqtt(topic, message);
   
   mqtt_to_server.emit(event.type, event);
 });
+
+mqtt_to_server.subscribeAndSave = function(topic) {
+  subscriptions.push(topic);
+  mqtt_to_server.subscribe(topic);
+};
 
 mqtt_to_server.cache = {};
 
@@ -241,45 +219,50 @@ setInterval(function() {
 // Events //
 ////////////
 
-mqtt_to_server.on('deviceinfo', function(e) {
+mqtt_to_server.on('devinfo', function(e) {
+  var info = JSON.parse(e.value);
+  
   if(panels[e.address]) {
-    for(var i in e.info) {
-      panels[e.address][i] = e.info[i];
+    for(var i in info) {
+      panels[e.address][i] = info[i];
     }
   } else {
-    panels[e.address] = fE('se-panel', e.info);
+    panels[e.address] = fE('se-panel', info);
     document.body.appendChild(panels[e.address]);
     
-    mqtt_to_server.subscribe('Se/' + e.address + '/connection');
-    mqtt_to_server.subscribe('Se/' + e.address + '/pininfo/+');
+    mqtt_to_server.subscribeAndSave('Se/' + e.address + '/connection');
+    mqtt_to_server.subscribeAndSave('Se/' + e.address + '/pininfo/+');
   }
 });
 
-mqtt_to_server.on('deviceconnection', function(e) {
-  if(e.connected) {
+mqtt_to_server.on('connection', function(e) {
+  if(e.value) {
     panels[e.address].classList.remove('disconnected');
   } else {
     panels[e.address].classList.add('disconnected');
   }
 });
 
-mqtt_to_server.on('pinvalue', function(e) {
+mqtt_to_server.on('pin', function(e) {
   panels[e.address].pins[e.pin].value = e.value;
 });
 
 mqtt_to_server.on('pininfo', function(e) {
+  var info = JSON.parse(e.value);
+  
   if(panels[e.address].pins[e.pin]) {
-    for(var i in e.info) {
-      panels[e.address].pins[e.pin][i] = e.info[i];
+    for(var i in info) {
+      panels[e.address].pins[e.pin][i] = info[i];
     }
   } else {
-    panels[e.address].addPin(e.pin, e.info);
+    panels[e.address].addPin(e.pin, info);
     
     panels[e.address].pins[e.pin].addEventListener('input', f => {
-      mqtt_to_server.cache['Se/' + e.address + '/pinreq/' + e.pin] = f.target.value.toString(16);
+      var mqtt_message = new SeleneParser.Packet(e.address, 'pin', e.pin, f.target.value, true).toMqtt();
+      mqtt_to_server.cache[mqtt_message.topic] = mqtt_message.message;
     });
     
-    mqtt_to_server.subscribe('Se/' + e.address + '/pin/' + e.pin);
+    mqtt_to_server.subscribeAndSave('Se/' + e.address + '/pin/' + e.pin);
   }
 });
 
