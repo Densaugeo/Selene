@@ -54,16 +54,16 @@ TYPES[2] = TYPES.connection = new PacketType({
 TYPES[3] = TYPES.devinfo = new PacketType({
   hasPin: false,
   size: -1,
-  validate: payload => payload.length <= 32,
-  toBuffer: (v) => new Buffer(v.substring(0, 32), 'utf8'),
+  validate: payload => payload.length <= 144,
+  toBuffer: (v) => new Buffer(v.substring(0, 144), 'utf8'),
   fromBuffer: (buffer) => buffer.toString('utf8')
 });
 
 TYPES[4] = TYPES.pininfo = new PacketType({
   hasPin: true,
   size: -1,
-  validate: payload => payload.length <= 32,
-  toBuffer: (v) => new Buffer(v.substring(0, 32), 'utf8'),
+  validate: payload => payload.length <= 144,
+  toBuffer: (v) => new Buffer(v.substring(0, 144), 'utf8'),
   fromBuffer: (buffer) => buffer.toString('utf8')
 });
 
@@ -188,7 +188,7 @@ Packet.fromBuffer = function(buffer) {
     buffer[9] & 0xFF || // Reserved bytes must be zero
     (type.size !== -1 && buffer[10] & 0xFF) || // For fixed-size packet types, len byte must be zero
     buffer.length < 11 + len || // Buffer must be long enough to hold payload
-    len > 32 // Payloads > 32 bytes not yet supported
+    len > 144 // Payloads > 144 bytes not yet supported
   ) {
     return null;
   }

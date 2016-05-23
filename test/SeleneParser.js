@@ -4,11 +4,11 @@ var SelenePacket = SeleneParser.Packet;
 var assert = require('assert');
 
 
-var pininfo = { name: 'Foo', min: 0, max: 0x1FF };
+var pininfo = { name: 'Foo', description: 'A wild description has appeared!', min: 0, max: 0x1FF };
 var pininfo_string = JSON.stringify(pininfo);
 var pininfo_buffer = Buffer(pininfo_string);
 
-var devinfo = { name: 'Foo' };
+var devinfo = { name: 'Foo', description: 'Look, a description!' };
 var devinfo_string = JSON.stringify(devinfo);
 var devinfo_buffer = Buffer(devinfo_string);
 
@@ -315,12 +315,12 @@ suite('SelenePacket.fromMqtt()', function() {
   });
   
   test('Devinfo packets with invalid payloads are marked null', function() {
-    var packet = SelenePacket.fromMqtt('Se/C30/devinfo/D2', Buffer(33));
+    var packet = SelenePacket.fromMqtt('Se/C30/devinfo/D2', Buffer(145));
     assert.strictEqual(packet, null);
   });
   
   test('Pininfo packets with invalid payloads are marked null', function() {
-    var packet = SelenePacket.fromMqtt('Se/C30/pininfo/D2', Buffer(33));
+    var packet = SelenePacket.fromMqtt('Se/C30/pininfo/D2', Buffer(145));
     assert.strictEqual(packet, null);
   });
   
@@ -426,15 +426,15 @@ suite('SelenePacket.fromBuffer()', function() {
     assert.strictEqual(packet, null);
   });
   
-  test('Devinfo packets with payloads longer than 32 bytes are marked null', function() {
-    var buffer = Buffer.concat([new Buffer([83, 0x30, 0x0C, 0, 0, DEVINFO, 0xD2, 0, 0, 0, 0x21]), new Buffer(33)]);
+  test('Devinfo packets with payloads longer than 144 bytes are marked null', function() {
+    var buffer = Buffer.concat([new Buffer([83, 0x30, 0x0C, 0, 0, DEVINFO, 0xD2, 0, 0, 0, 0x91]), new Buffer(145)]);
     
     var packet = SelenePacket.fromBuffer(buffer);
     assert.strictEqual(packet, null);
   });
   
-  test('Pininfo packets with payloads longer than 32 bytes are marked null', function() {
-    var buffer = Buffer.concat([new Buffer([83, 0x30, 0x0C, 0, 0, PININFO, 0xD2, 0, 0, 0, 0x21]), new Buffer(33)]);
+  test('Pininfo packets with payloads longer than 144 bytes are marked null', function() {
+    var buffer = Buffer.concat([new Buffer([83, 0x30, 0x0C, 0, 0, PININFO, 0xD2, 0, 0, 0, 0x91]), new Buffer(145)]);
     
     var packet = SelenePacket.fromBuffer(buffer);
     assert.strictEqual(packet, null);
