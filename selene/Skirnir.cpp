@@ -4,7 +4,6 @@
 Skirnir::Skirnir(HardwareSerial* port_) {
   port = port_;
   fsm_state = START;
-  receive_buffer[60] = '\0';
 }
 
 void Skirnir::heartbeat() {
@@ -23,60 +22,74 @@ void Skirnir::send45(uint8_t payload[]) {
 }
 
 void Skirnir::send(uint8_t payload[], uint32_t size) {
-  int actual_size = size < 45 ? size : 45;
-  uint8_t padded_payload[45];
-  
-  for(int i = 0; i < actual_size; ++i) {
-    padded_payload[i] = payload[i];
+  if(size < 45) {
+    uint8_t padded_payload[45];
+    
+    for(uint8_t i = 0; i < size; ++i) {
+      padded_payload[i] = payload[i];
+    }
+    
+    for(uint8_t i = size; i < 45; ++i) {
+      padded_payload[i] = 0;
+    }
+    
+    send45(padded_payload);
+  } else {
+    send45(payload);
   }
-  
-  for(int i = actual_size; i < 45; ++i) {
-    padded_payload[i] = 0;
-  }
-  
-  send45(padded_payload);
 }
 
-bool Skirnir::receive(uint8_t payload[], uint8_t next) {
+bool Skirnir::fsmGlobals(uint8_t payload[], uint8_t next, uint8_t input_buffer[]) {
   switch(next) {
     case '-':
       fsm_state = PING;
-      break;
+      return true;
     case '#':
       fsm_state = PACKET_INTERMEDIATE;
       fsm_repeats = 0;
-      break;
+      input_buffer[60] = '\0';
+      return true;
     default:
-      switch(fsm_state) {
-        case PING:
-          if(next == '\n') port -> write(">\n");
-          fsm_state = START;
-          break;
-        case PACKET_INTERMEDIATE:
-          receive_buffer[fsm_repeats] = next;
-          if(++fsm_repeats >= 60) fsm_state = PACKET_END;
-          break;
-        case PACKET_END:
-          fsm_state = START;
-          if(next == '\n') {
-            decode_base64(receive_buffer, payload);
-            return true;
-          }
-          break;
-        default:
-          break;
-      }
+      return false;
   }
-  
-  return false;
 }
 
-bool Skirnir::receive_until_packet(uint8_t payload[]) {
+uint8_t Skirnir::fsmLocals(uint8_t payload[], uint8_t next, uint8_t input_buffer[]) {
+  switch(fsm_state) {
+    case PING:
+      if(next == '\n') port -> write(">\n");
+      fsm_state = START;
+      return 0;
+    case PACKET_INTERMEDIATE:
+      input_buffer[fsm_repeats] = next;
+      if(++fsm_repeats >= 60) fsm_state = PACKET_END;
+      return 0;
+    case PACKET_END:
+      fsm_state = START;
+      if(next == '\n') {
+        decode_base64(input_buffer, payload);
+        return 45;
+      }
+      return 0;
+    default:
+      return 0;
+  }
+}
+
+uint8_t Skirnir::receive(uint8_t payload[], uint8_t next) {
+  if(fsmGlobals(payload, next, receive_buffer)) {
+    return 0;
+  } else {
+    return fsmLocals(payload, next, receive_buffer);
+  }
+}
+
+uint8_t Skirnir::receive_until_packet(uint8_t payload[]) {
   while(port -> available()) {
     if(receive(payload, port -> read())) {
-      return true;
+      return 45;
     }
   }
   
-  return false;
+  return 0;
 }
