@@ -8,7 +8,7 @@ var util = require('util');
 var winston = require('winston');
 
 // Testing
-var SeleneParser = require('./SelenePacket.js');
+var SeleneParser = require('./SeleneParser.js');
 
 //////////////
 // Settings //
@@ -57,10 +57,16 @@ var logger = new winston.Logger({
 var mqtts = {};
 var mqtt_caches = {};
 
+// Keys are serial connections, values are arrays of Selene addresses
+var mqtt_directory = {};
+
 mqtt.MqttClient.prototype.publishAndLog = function(topic, message, opts, callback) {
   this.publish(topic, message, opts, callback);
   
-  logger.debug('Sent to MQTT:', { topic: topic, message: util.inspect(message) });
+  logger.verbose('Sent to MQTT:', {
+    topic: topic,
+    message: message.length > 4 ? message.toString('UTF-8') : util.inspect(message) 
+  });
 }
 
 var start_mqtt = function(address, cache) {
@@ -97,7 +103,10 @@ var start_mqtt = function(address, cache) {
 }
 
 var onmessage = function(topic, message) {
-  logger.debug('MQTT received:', { topic: topic, message: message });
+  logger.verbose('MQTT received:', {
+    topic: topic,
+    message: message.length > 4 ? message.toString('UTF-8') : util.inspect(message) 
+  });
   
   var buffer = SeleneParser.Packet.fromMqtt(topic, message).toBuffer();
   
@@ -105,7 +114,7 @@ var onmessage = function(topic, message) {
     skirnir.broadcast(buffer);
     logger.debug('Skirnir sent:', util.inspect(buffer));
   } else {
-    logger.debug('Packet from MQTT was invalid');
+    logger.verbose('Packet from MQTT was invalid');
   }
 }
 
@@ -127,22 +136,25 @@ skirnir.on('message', function(e) {
   if(packet !== null) {
     var mqtt_message = packet.toMqtt();
     
-    if(mqtt_caches[e.device] === undefined) {
-      mqtt_caches[e.device] = {};
+    if(mqtt_caches[packet.address] === undefined) {
+      mqtt_caches[packet.address] = {};
     }
     
-    mqtt_caches[e.device][packet.typeCode] = mqtt_message;
+    mqtt_caches[packet.address][packet.typeCode] = mqtt_message;
     
-    if(mqtts[e.device] === undefined) {
-      mqtts[e.device] = start_mqtt(packet.address, mqtt_caches[e.device]);
+    if(mqtts[packet.address] === undefined) {
+      mqtts[packet.address] = start_mqtt(packet.address, mqtt_caches[packet.address]);
+      mqtt_directory[e.device].push(packet.address);
     } else {
-      mqtts[e.device].publishAndLog(mqtt_message.topic, mqtt_message.message, { retain: true, qos: 0 });
+      mqtts[packet.address].publishAndLog(mqtt_message.topic, mqtt_message.message, { retain: true, qos: 0 });
     }
   }
 });
 
 skirnir.on('connect', e => {
   logger.info('Connected device ' + e.device);
+  
+  mqtt_directory[e.device] = [];
   
   var discovery_packet = new SeleneParser.Packet(0xFFFFFFFF, 'discovery').toBuffer();
   skirnir.connections[e.device].send(discovery_packet);
@@ -153,11 +165,16 @@ skirnir.on('connect', e => {
 skirnir.on('disconnect', e => {
   logger.info('Disconnected device ' + e.device);
   
-  mqtts[e.device].publishAndLog('Se/1/connection', Buffer([0]), { retain: true, qos: 0 });
-  mqtts[e.device].end(true, function() {
-    mqtts[e.device].removeAllListeners();
-    delete mqtts[e.device];
+  mqtt_directory[e.device].forEach(function(v) {
+    mqtts[v].publishAndLog('Se/' + v + '/connection', Buffer([0]), { retain: true, qos: 0 });
+    mqtts[v].end(true, function() {
+      mqtts[v].removeAllListeners();
+      delete mqtts[v];
+      delete mqtt_caches[v];
+    });
   });
+  
+  delete mqtt_directory[e.device];
 });
 
 // Rest of these are just for logging
