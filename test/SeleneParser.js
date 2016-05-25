@@ -90,6 +90,24 @@ var devinfo_r_packet = {
   buffer: Buffer.concat([new Buffer(['S'.charCodeAt(0), 0xBA, 0, 0x0F, 0, DEVINFO, 0, 0x80, 0, 0, devinfo_buffer.length]), devinfo_buffer])
 }
 
+var devinfo_empty_packet = {
+  js: {
+    address: 0xE1FFE1,
+    type: 'devinfo',
+    typeCode: DEVINFO,
+    typeSpec: SeleneParser.TYPES.devinfo,
+    pin: null,
+    payload: new Buffer(0),
+    value: '',
+    isRequest: false
+  },
+  mqtt: {
+    topic: 'Se/E1FFE1/devinfo',
+    message: new Buffer(0)
+  },
+  buffer: new Buffer(['S'.charCodeAt(0), 0xE1, 0xFF, 0xE1, 0, DEVINFO, 0, 0, 0, 0, 0])
+}
+
 var pininfo_packet = {
   js: {
     address: 0xFAE,
@@ -124,6 +142,24 @@ var pininfo_r_packet = {
     message: pininfo_buffer
   },
   buffer: Buffer.concat([new Buffer(['S'.charCodeAt(0), 0x24, 0x10, 0, 0, PININFO, 0, 0x80, 0, 0, pininfo_buffer.length]), pininfo_buffer])
+}
+
+var pininfo_empty_packet = {
+  js: {
+    address: 0xFA7E,
+    type: 'pininfo',
+    typeCode: PININFO,
+    typeSpec: SeleneParser.TYPES.pininfo,
+    pin: 0x07,
+    payload: new Buffer(0),
+    value: '',
+    isRequest: true
+  },
+  mqtt: {
+    topic: 'Se/FA7E/pininfo/7/r',
+    message: new Buffer(0)
+  },
+  buffer: new Buffer(['S'.charCodeAt(0), 0x7E, 0xFA, 0, 0, PININFO, 0x07, 0x80, 0, 0, 0])
 }
 
 var pin_packet = {
@@ -217,6 +253,14 @@ suite('SelenePacket.fromMqtt()', function() {
   test('Parses valid pin/r packet', function() {
     var packet = SelenePacket.fromMqtt(pin_r_packet.mqtt.topic, pin_r_packet.mqtt.message);
     assert_packet_js(packet, pin_r_packet.js);
+  });
+  
+  test('Parses valid dev- and pininfo packets with empty payloads', function() {
+    var packet = SelenePacket.fromMqtt(devinfo_empty_packet.mqtt.topic, devinfo_empty_packet.mqtt.message);
+    assert_packet_js(packet, devinfo_empty_packet.js);
+    
+    var packet = SelenePacket.fromMqtt(pininfo_empty_packet.mqtt.topic, pininfo_empty_packet.mqtt.message);
+    assert_packet_js(packet, pininfo_empty_packet.js);
   });
   
   test('Packets with invalid prefixes are marked null', function() {
@@ -382,6 +426,14 @@ suite('SelenePacket.fromBuffer()', function() {
     assert_packet_js(packet, pin_r_packet.js);
   });
   
+  test('Parses valid dev- and pininfo packets with empty payloads', function() {
+    var packet = SelenePacket.fromBuffer(devinfo_empty_packet.buffer);
+    assert_packet_js(packet, devinfo_empty_packet.js);
+    
+    var packet = SelenePacket.fromBuffer(pininfo_empty_packet.buffer);
+    assert_packet_js(packet, pininfo_empty_packet.js);
+  });
+  
   test('Packets with invalid prefixes are marked null', function() {
     var packet = SelenePacket.fromBuffer(new Buffer([82, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
@@ -489,6 +541,16 @@ suite('SelenePacket.prototype.toMqtt()', function() {
     var mqtt = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toMqtt();
     assert.deepStrictEqual(mqtt, pin_r_packet.mqtt);
   });
+  
+  test('Parses valid dev- and pininfo packets with empty payloads', function() {
+    var js = devinfo_empty_packet.js;
+    var mqtt = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toMqtt();
+    assert.deepStrictEqual(mqtt, devinfo_empty_packet.mqtt);
+    
+    var js = pininfo_empty_packet.js;
+    var mqtt = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toMqtt();
+    assert.deepStrictEqual(mqtt, pininfo_empty_packet.mqtt);
+  });
 });
 
 suite('SelenePacket.prototype.toBuffer()', function() {
@@ -538,6 +600,16 @@ suite('SelenePacket.prototype.toBuffer()', function() {
     var js = pin_r_packet.js;
     var buffer = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toBuffer();
     assert.deepStrictEqual(buffer, pin_r_packet.buffer);
+  });
+  
+  test('Parses valid dev- and pininfo packets with empty payloads', function() {
+    var js = devinfo_empty_packet.js;
+    var buffer = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toBuffer();
+    assert.deepStrictEqual(buffer, devinfo_empty_packet.buffer);
+    
+    var js = pininfo_empty_packet.js;
+    var buffer = new SelenePacket(js.address, js.typeSpec, js.pin, js.payload, js.isRequest).toBuffer();
+    assert.deepStrictEqual(buffer, pininfo_empty_packet.buffer);
   });
 });
 
