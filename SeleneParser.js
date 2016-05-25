@@ -183,6 +183,7 @@ Packet.fromBuffer = function(buffer) {
   
   if(
     buffer[0] !== 83 || // Prefix - must be 'S'
+    (!type.hasPin && buffer[6]) || // For packet types that do not refer to pins, pin byte must be zero
     buffer[7] & 0x7F || // Reserved flags must be zero
     buffer[8] & 0xFF || // Reserved bytes must be zero
     buffer[9] & 0xFF || // Reserved bytes must be zero

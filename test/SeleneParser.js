@@ -444,6 +444,11 @@ suite('SelenePacket.fromBuffer()', function() {
     assert.strictEqual(packet, null);
   });
   
+  test('Packets that do not refer to pins should not use pin byte', function() {
+    var packet = SelenePacket.fromBuffer(Buffer.concat([new Buffer([83, 0x30, 0x0C, 0, 0, DEVINFO, 0xD2, 0, 0, 0, devinfo_buffer.length]), devinfo_buffer]));
+    assert.strictEqual(packet, null);
+  });
+  
   test('Packets with non-zero reserved flags are marked null', function() {
     var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0x04, 0, 0, 0, 1, 0, 0, 0]), true);
     assert.strictEqual(packet, null);
