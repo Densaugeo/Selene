@@ -18,7 +18,7 @@ To support use in μCs, web browsers, and transmission over MQTT, Selene packets
 |7.0³  |IsRequest|bool  |True for packets requesting a change. False for packets reporting actual state.|
 |7.1-7 |Reserved |0     |Reserved for future use. Currently always equal to zero.|
 |8-9   |Reserved |0     |Reserved for future use. Currently always equal to zero.|
-|10    |Len      |u8    |Specifies payload length in bytes for packets with variables-size payloads. Equal to zero otherwise.|
+|10    |PSize    |u8    |Size of payload, in bytes
 |11-End|Payload  |?     |Payload type varies depeneding on packet type. Details in the 'Packet Types' section.|
 
 ¹32-bit unsigned integer with little endian byte order.
@@ -79,7 +79,7 @@ Connection packet indicating device 0xCA75 is connected:
 
 ~~~
 // Binary
-<Buffer 53 75 ca 00 00 02 00 00 00 00 00 01>
+<Buffer 53 75 ca 00 00 02 00 00 00 00 01 01>
 
 // MQTT
 {
@@ -127,7 +127,7 @@ Pin packet requesting that device 0x5E34 set pin 0xA1 to 13:
 
 ~~~
 // Binary
-<Buffer 53 34 5e 00 00 05 a1 80 00 00 00 0d 00 00 00>
+<Buffer 53 34 5e 00 00 05 a1 80 00 00 04 0d 00 00 00>
 
 // MQTT
 {

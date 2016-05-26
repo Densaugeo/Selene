@@ -51,7 +51,7 @@ var connection_packet = {
     topic: 'Se/1/connection',
     message: new Buffer([1])
   },
-  buffer: new Buffer(['S'.charCodeAt(0), 0x01, 0, 0, 0, CONNECTION, 0, 0, 0, 0, 0, 1])
+  buffer: new Buffer(['S'.charCodeAt(0), 0x01, 0, 0, 0, CONNECTION, 0, 0, 0, 0, 0x01, 0x01])
 }
 
 var devinfo_packet = {
@@ -177,7 +177,7 @@ var pin_packet = {
     topic: 'Se/C30/pin/D2',
     message: new Buffer([2, 1, 0, 0])
   },
-  buffer: new Buffer(['S'.charCodeAt(0), 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0, 0x02, 0x01, 0, 0])
+  buffer: new Buffer(['S'.charCodeAt(0), 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0x04, 0x02, 0x01, 0, 0])
 }
 
 var pin_r_packet = {
@@ -195,7 +195,7 @@ var pin_r_packet = {
     topic: 'Se/CDC/pin/12/r',
     message: new Buffer([0xBB, 0, 0, 0])
   },
-  buffer: new Buffer(['S'.charCodeAt(0), 0xDC, 0x0C, 0, 0, PIN, 0x12, 0x80, 0, 0, 0, 0xBB, 0, 0, 0])
+  buffer: new Buffer(['S'.charCodeAt(0), 0xDC, 0x0C, 0, 0, PIN, 0x12, 0x80, 0, 0, 0x04, 0xBB, 0, 0, 0])
 }
 
 var packets = [discovery_packet, connection_packet, devinfo_packet, devinfo_r_packet, devinfo_empty_packet, pininfo_packet, pininfo_r_packet, pininfo_empty_packet, pin_packet, pin_r_packet];
@@ -435,12 +435,12 @@ suite('SelenePacket.fromBuffer()', function() {
   });
   
   test('Packets with invalid prefixes are marked null', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([82, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0, 1, 0, 0, 0]));
+    var packet = SelenePacket.fromBuffer(new Buffer([82, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0x04, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
   });
   
   test('Packets with invalid types are marked null', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, 0x06, 0xD2, 0, 0, 0, 0, 1, 0, 0, 0]));
+    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, 0x06, 0xD2, 0, 0, 0, 0x04, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
   });
   
@@ -450,28 +450,28 @@ suite('SelenePacket.fromBuffer()', function() {
   });
   
   test('Packets with non-zero reserved flags are marked null', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0x04, 0, 0, 0, 1, 0, 0, 0]), true);
+    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0x04, 0, 0, 0x04, 1, 0, 0, 0]), true);
     assert.strictEqual(packet, null);
   });
   
   test('Packets with non-zero reserved bytes are marked null', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0x80, 0, 0, 1, 0, 0, 0]));
+    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0x80, 0, 0x04, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
     
-    packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0x01, 0, 1, 0, 0, 0]));
+    packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0x01, 0x04, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
   });
   
-  test('Packets with fixed-size payloads should not use len', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0x01, 1, 0, 0, 0]));
+  test('PSize must match payload size', function() {
+    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0, 1, 0, 0, 0]));
     assert.strictEqual(packet, null);
   });
   
   test('Packets with not enough payload bytes are marked null', function() {
-    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, CONNECTION, 0xD2, 0, 0, 0, 0]));
+    var packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, CONNECTION, 0xD2, 0, 0, 0, 0x01]));
     assert.strictEqual(packet, null);
     
-    packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0, 1, 0, 0]));
+    packet = SelenePacket.fromBuffer(new Buffer([83, 0x30, 0x0C, 0, 0, PIN, 0xD2, 0, 0, 0, 0x04, 1, 0, 0]));
     assert.strictEqual(packet, null);
   });
   

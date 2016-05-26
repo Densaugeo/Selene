@@ -179,7 +179,7 @@ Packet.fromBuffer = function(buffer) {
     return null;
   }
   
-  var len = type.size !== -1 ? type.size : buffer[10];
+  var pSize = type.size !== -1 ? type.size : buffer[10];
   
   if(
     buffer[0] !== 83 || // Prefix - must be 'S'
@@ -187,9 +187,9 @@ Packet.fromBuffer = function(buffer) {
     buffer[7] & 0x7F || // Reserved flags must be zero
     buffer[8] & 0xFF || // Reserved bytes must be zero
     buffer[9] & 0xFF || // Reserved bytes must be zero
-    (type.size !== -1 && buffer[10] & 0xFF) || // For fixed-size packet types, len byte must be zero
-    buffer.length < 11 + len || // Buffer must be long enough to hold payload
-    len > 144 // Payloads > 144 bytes not yet supported
+    (type.size !== -1 && buffer[10] !== type.size) || // For fixed-size packet types, pSize byte can be validated
+    buffer.length < 11 + pSize || // Buffer must be long enough to hold payload
+    pSize > 144 // Payloads > 144 bytes not yet supported
   ) {
     return null;
   }
@@ -198,30 +198,23 @@ Packet.fromBuffer = function(buffer) {
     buffer.readUInt32LE(1),         // address
     type,                           // type
     type.hasPin ? buffer[6] : null, // pin
-    buffer.slice(11, 11 + len),     // payload
+    buffer.slice(11, 11 + pSize),   // payload
     buffer[7] & 0x80                // isRequest
   );
 }
 
 // @method proto Buffer toBuffer() -- Does exactly what it says
 Packet.prototype.toBuffer = function() {
-  var buffer = new Buffer(11).fill(0);
+  var buffer = new Buffer(11);
   
   buffer[0] = 83; // Prefix - 'S'
   buffer.writeUInt32LE(this.address, 1);
   buffer[5] = this.typeSpec.typeCode;
-  
-  if(this.typeSpec.hasPin) {
-    buffer[6] = this.pin;
-  }
-  
-  if(this.isRequest) {
-    buffer[7] = 0x80;
-  }
-  
-  if(this.typeSpec.size === -1) {
-    buffer[10] = this.payload.length;
-  }
+  buffer[6] = this.pin || 0;
+  buffer[7] = this.isRequest << 7;
+  buffer[8] = 0;
+  buffer[9] = 0;
+  buffer[10] = this.payload.length;
   
   return Buffer.concat([buffer, this.payload]);
 }
