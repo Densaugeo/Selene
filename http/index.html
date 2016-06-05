@@ -103,8 +103,8 @@ Hematite.elements['SE-PANEL'] = function(element) {
       get: () => element.headingText,
       set: v  => element.headingText = v ? v : 'Unnamed Device'
     },
-    // @prop String description -- Alias for .textContent of description div
-    description: {
+    // @prop String desc -- Alias for .textContent of description div
+    desc: {
       get: () => descriptionElement.textContent,
       set: v  => descriptionElement.textContent = v
     }
@@ -117,7 +117,7 @@ Hematite.elements['SE-PANEL'] = function(element) {
   // @method undefined addPin(Number index, Object properties) -- Creates a \<se-pin\> in .pins at index, attaches it at the appropriate place in the DOM, and copies the given properties to it
   element.addPin = function(index, properties) {
     // Figure out where the last pin is in the DOM tree
-    var previousNode = element.description;
+    var previousNode = element.desc;
     for(var i = index; i >= 0; --i) {
       if(element.pins[i]) {
         previousNode = element.pins[i];
@@ -165,8 +165,8 @@ Hematite.elements['SE-PIN'] = function(element) {
       get: () => div.textContent,
       set: v  => div.textContent = v + ':'
     },
-    // @prop String description -- Alias for .title of description div
-    description: {
+    // @prop String desc -- Alias for .title of description div
+    desc: {
       get: () => desc,
       set: v  => updateTitle(desc = v)
     },

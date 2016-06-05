@@ -16,7 +16,7 @@ void send_with_skirnir(uint8_t payload[], uint8_t size) {
 }
 
 Selene::Pin** pins = new Selene::Pin*[3];
-Selene::Device a_device = Selene::Device(1, pins, 3, (uint8_t*) "{\"name\":\"Selene One\",\"description\":\"Very first Selene device\"}", 62, &send_with_skirnir);
+Selene::Device a_device = Selene::Device(1, pins, 3, (uint8_t*) "{\"name\":\"Selene One\",\"desc\":\"Very first Selene device\"}", 55, &send_with_skirnir);
 
 void setup() {
   a_device.pins[0] = new Selene::DOut(0, 2, (uint8_t*) "{\"name\":\"Red\",\"min\":0,\"max\":1}", 30);
