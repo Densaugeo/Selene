@@ -125,6 +125,8 @@ Hematite.elements['SE-PANEL'] = function(element) {
       }
     }
     
+    properties.index = index;
+    
     if(properties.name === undefined) {
       properties.name = 'Pin ' + index;
     }
@@ -144,7 +146,15 @@ Hematite.elements['SE-PIN'] = function(element) {
   var div = element.appendChild(fE('div', { className: 'description', textContent: ':' }));
   var input = element.appendChild(fE('input', { type: 'range', min: 0, max: 1, step: 1, value: 0 }));
   
+  var index = 0;
+  var desc = '';
+  
   Object.defineProperties(element, {
+    // @prop Number index -- Setting .index updates .title
+    index: {
+      get: () => index,
+      set: v  => updateTitle(index = v)
+    },
     // @prop String value -- Alias for .value of input element
     value: {
       get: () => input.value,
@@ -157,8 +167,8 @@ Hematite.elements['SE-PIN'] = function(element) {
     },
     // @prop String description -- Alias for .title of description div
     description: {
-      get: () => div.title,
-      set: v  => div.title = v
+      get: () => desc,
+      set: v  => updateTitle(desc = v)
     },
     // @prop String min -- Alias for .min of input element
     min: {
@@ -171,6 +181,10 @@ Hematite.elements['SE-PIN'] = function(element) {
       set: v  => input.max = v
     }
   });
+  
+  var updateTitle = function() {
+    div.title = 'Pin ' + index + (desc ? ' - ' : '') + desc;
+  }
 }
 
 var panels = [];
