@@ -16,12 +16,12 @@ void send_with_skirnir(uint8_t payload[], uint8_t size) {
 }
 
 Selene::Pin** pins = new Selene::Pin*[3];
-Selene::Device a_device = Selene::Device(1, pins, 3, (uint8_t*) "{\"name\":\"Selene One\",\"desc\":\"Very first Selene device\"}", 55, &send_with_skirnir);
+Selene::Device a_device = Selene::Device(1, pins, 3, (uint8_t*) "{\"name\":\"Selene One\",\"desc\":\"Very first Selene device\",\"min\":0,\"max\":1}", 71, &send_with_skirnir);
 
 void setup() {
-  a_device.pins[0] = new Selene::DOut(0, 2, (uint8_t*) "{\"name\":\"Red\",\"min\":0,\"max\":1}", 30);
-  a_device.pins[1] = new Selene::DOut(1, 3, (uint8_t*) "{\"name\":\"Green\",\"min\":0,\"max\":1}", 32);
-  a_device.pins[2] = new Selene::DOut(2, 4, (uint8_t*) "{\"name\":\"Blue\",\"min\":0,\"max\":1}", 31);
+  a_device.pins[0] = new Selene::DOut(0, 2, (uint8_t*) "{\"name\":\"Red\"}", 14);
+  a_device.pins[1] = new Selene::DOut(1, 3, (uint8_t*) "{\"name\":\"Green\"}", 16);
+  a_device.pins[2] = new Selene::DOut(2, 4, (uint8_t*) "{\"name\":\"Blue\"}", 15);
 
   pinMode(5, INPUT);
   digitalWrite(5, HIGH); // Turn on pullup

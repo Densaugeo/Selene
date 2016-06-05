@@ -114,6 +114,12 @@ Hematite.elements['SE-PANEL'] = function(element) {
   // [\<se-pin\>] pins -- This device's pins
   element.pins = [];
   
+  // @prop Number|null min -- Default .min for pins on this device
+  element.min = null;
+  
+  // @prop Number|null max -- Default .max for pins on this device
+  element.max = null;
+  
   // @method undefined addPin(Number index, Object properties) -- Creates a \<se-pin\> in .pins at index, attaches it at the appropriate place in the DOM, and copies the given properties to it
   element.addPin = function(index, properties) {
     // Figure out where the last pin is in the DOM tree
@@ -129,6 +135,14 @@ Hematite.elements['SE-PANEL'] = function(element) {
     
     if(properties.name === undefined) {
       properties.name = 'Pin ' + index;
+    }
+    
+    if(properties.min === undefined && element.min !== null) {
+      properties.min = element.min;
+    }
+    
+    if(properties.max === undefined && element.max !== null) {
+      properties.max = element.max;
     }
     
     element.pins[index] = element.insertBefore(fE('se-pin', properties), previousNode.nextSibling);
