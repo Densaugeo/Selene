@@ -89,7 +89,7 @@ var start_mqtt = function(address, cache) {
     mqtt_to_server.subscribe('Se/' + address + '/pin/+/r');
     
     for(var i in cache) {
-      mqtt_to_server.publishAndLog(cache[i].topic, cache[i].message, { retain: true, qos: 0 });
+      mqtt_to_server.publishAndLog(i, cache[i], { retain: true, qos: 0 });
     }
   });
   
@@ -140,7 +140,7 @@ skirnir.on('message', function(e) {
       mqtt_caches[packet.address] = {};
     }
     
-    mqtt_caches[packet.address][packet.typeCode] = mqtt_message;
+    mqtt_caches[packet.address][mqtt_message.topic] = mqtt_message.message;
     
     if(mqtts[packet.address] === undefined) {
       mqtts[packet.address] = start_mqtt(packet.address, mqtt_caches[packet.address]);
