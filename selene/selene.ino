@@ -59,6 +59,8 @@ void loop() {
   }
 
   // Check if pins needs to send updates
-  a_device.sendPinUpdates();
+  a_device.sendPinUpdates(millis());
+  
+  a_device.savePinStates(millis());
 }
 

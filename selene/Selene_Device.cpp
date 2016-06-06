@@ -41,7 +41,7 @@ namespace Selene {
       // And trigger pin updates
     }
     
-    updateAllPins = true;
+    sendAllPins = true;
   }
   
   void Device::pinRequest(uint8_t pinNumber, uint32_t state) {
@@ -54,19 +54,32 @@ namespace Selene {
     }
   }
   
-  void Device::sendPinUpdates() {
+  void Device::sendPinUpdates(uint32_t millis) {
     for(uint8_t i = 0; i < len; ++i) {
       Pin* pin = pins[i];
+      uint32_t state = pin -> getState();
       
-      if(pin -> getState() != pin -> statePrevious || updateAllPins) {
+      if(state != pin -> statePrevious || sendAllPins) {
         pinPacket.setPin(pin -> selenePin);
-        pinPacket.setPayloadU32(pin -> getState());
+        pinPacket.setPayloadU32(state);
         send(pinPacket.buffer, pinPacket.size());
         
-        pin -> statePrevious = pin -> getState();
+        pin -> statePrevious = state;
+        needsSave = true;
+        lastChange = millis;
       }
     }
     
-    updateAllPins = false;
+    sendAllPins = false;
+  }
+  
+  void Device::savePinStates(uint32_t millis) {
+    if(needsSave && millis - lastChange > saveDelay) {
+      for(uint8_t i = 0; i < len; ++i) {
+        pins[i] -> saveState(address);
+      }
+      
+      needsSave = false;
+    }
   }
 }

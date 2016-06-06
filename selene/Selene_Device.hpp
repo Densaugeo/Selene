@@ -16,7 +16,13 @@ namespace Selene {
       PinPacket pinPacket;
       
       // If set, .sendPinUpdates() will send updates for all pins
-      bool updateAllPins = false;
+      bool sendAllPins = false;
+      
+      // Set to true when .sendPinUpdates() detects that a pin has changed
+      bool needsSave = false;
+      
+      // Time last pin state change was detected, in ms
+      uint32_t lastChange = 0;
       
       /* send:
        *   Description:
@@ -42,6 +48,10 @@ namespace Selene {
       
       // Size of info, in bytes
       uint8_t infoSize;
+      
+      // Time to wait from last change before saving, in ms. Pin states are saved after all pins have remained
+      // constant for this time. Setting this too low can burn out EEPROM!
+      uint32_t saveDelay = 60000;
       
       // Constructor just initializes stuff
       Device(uint32_t address, Pin** pins, uint8_t len, uint8_t* info, uint8_t infoSize, void (*send)(uint8_t*, uint8_t)):
@@ -74,8 +84,19 @@ namespace Selene {
       /* sendPinUpdates:
        *   Description:
        *     Send updates for all Pins whose state has changed since the last time .sendPinUpdates() was called
+       *   Parameters:
+       *     millis - Current time, as given by Arduino millis()
        */
-      void sendPinUpdates();
+      void sendPinUpdates(uint32_t millis);
+      
+      /* savePinStates:
+       *   Description:
+       *     If no pin changes have been detected for .saveDelay ms, call .saveState() on all Pins whose state
+       *     has changed since the last save
+       *   Parameters:
+       *     millis - Current time, as given by Arduino millis()
+       */
+      void savePinStates(uint32_t millis);
   };
 }
 

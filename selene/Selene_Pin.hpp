@@ -29,9 +29,15 @@ namespace Selene {
       virtual uint32_t getState() = 0;
       virtual void setState(uint32_t v) = 0;
       
-      // By default, .saveState() does nothing. An inheritor can override it to provide a function for
-      // saving state in EEPROM, which would normally be retrieved by the inheritor's constructor
-      virtual void saveState() {}
+      /* saveState:
+       *   Description:
+       *     By default, .saveState() does nothing. An inheritor can override it to provide a function for
+       *     saving state in EEPROM, which would normally be retrieved by the inheritor's constructor
+       *   Parameters:
+       *     seleneAddress - Selene address is provided (and selenePin property is available) to allow
+       *       storing states in different memory areas based on address and pin #
+       */
+      virtual void saveState(uint32_t seleneAddress) {}
   };
 }
 
