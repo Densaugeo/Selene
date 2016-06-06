@@ -39,7 +39,7 @@
     "hematite": "git+https://git@github.com/Densaugeo/Hematite.git#2.1.0",
     "mocha": "^2.4.5",
     "mosca": "^1.2.0",
-    "mqtt": "~1.9.0",
+    "mqtt": "~1.11.0",
     "nconf": "~0.8.4",
     "node-static": "~0.7.7",
     "skirnir": "git://github.com/Densaugeo/Skirnir.git#1.1.0",

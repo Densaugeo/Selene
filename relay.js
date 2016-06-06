@@ -60,15 +60,6 @@ var mqtt_caches = {};
 // Keys are serial connections, values are arrays of Selene addresses
 var mqtt_directory = {};
 
-mqtt.MqttClient.prototype.publishAndLog = function(topic, message, opts, callback) {
-  this.publish(topic, message, opts, callback);
-  
-  logger.verbose('Sent to MQTT:', {
-    topic: topic,
-    message: message.length > 4 ? message.toString('UTF-8') : util.inspect(message) 
-  });
-}
-
 var start_mqtt = function(address, cache) {
   var mqtt_to_server = mqtt.connect('mqtt://localhost:1883', {
     queueQoSZero: false,
@@ -84,12 +75,21 @@ var start_mqtt = function(address, cache) {
   mqtt_to_server.on('connect', function() {
     logger.info('Connected to mqtt://localhost:1883');
     
-    mqtt_to_server.publishAndLog('Se/' + address + '/connection', Buffer([1]), { retain: true, qos: 0 });
+    mqtt_to_server.publish('Se/' + address + '/connection', Buffer([1]), { retain: true, qos: 0 });
     
     mqtt_to_server.subscribe('Se/' + address + '/pin/+/r');
     
     for(var i in cache) {
-      mqtt_to_server.publishAndLog(i, cache[i], { retain: true, qos: 0 });
+      mqtt_to_server.publish(i, cache[i], { retain: true, qos: 0 });
+    }
+  });
+  
+  mqtt_to_server.on('packetsend', (packet) => {
+    if(packet.cmd === 'publish') {
+      logger.verbose('Sent to MQTT:', {
+        topic: packet.topic,
+        message: packet.payload.length > 4 ? packet.payload.toString('UTF-8') : util.inspect(packet.payload)
+      });
     }
   });
   
@@ -146,7 +146,7 @@ skirnir.on('message', function(e) {
       mqtts[packet.address] = start_mqtt(packet.address, mqtt_caches[packet.address]);
       mqtt_directory[e.device].push(packet.address);
     } else {
-      mqtts[packet.address].publishAndLog(mqtt_message.topic, mqtt_message.message, { retain: true, qos: 0 });
+      mqtts[packet.address].publish(mqtt_message.topic, mqtt_message.message, { retain: true, qos: 0 });
     }
   }
 });
@@ -166,7 +166,7 @@ skirnir.on('disconnect', e => {
   logger.info('Disconnected device ' + e.device);
   
   mqtt_directory[e.device].forEach(function(v) {
-    mqtts[v].publishAndLog('Se/' + v + '/connection', Buffer([0]), { retain: true, qos: 0 });
+    mqtts[v].publish('Se/' + v + '/connection', Buffer([0]), { retain: true, qos: 0 });
     mqtts[v].end(true, function() {
       mqtts[v].removeAllListeners();
       delete mqtts[v];
