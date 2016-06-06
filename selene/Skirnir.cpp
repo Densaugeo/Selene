@@ -21,6 +21,17 @@ void Skirnir::send45(uint8_t payload[]) {
   port -> write((char*) send_buffer);
 }
 
+void Skirnir::send180(uint8_t payload[]) {
+  uint8_t send_buffer[243];
+  
+  send_buffer[0] = '&';
+  encode_base64(payload, 180, send_buffer + 1);
+  send_buffer[241] = '\n';
+  send_buffer[242] = '\0';
+  
+  port -> write((char*) send_buffer);
+}
+
 void Skirnir::send(uint8_t payload[], uint32_t size) {
   if(size < 45) {
     uint8_t padded_payload[45];
@@ -34,8 +45,22 @@ void Skirnir::send(uint8_t payload[], uint32_t size) {
     }
     
     send45(padded_payload);
-  } else {
+  } else if(size == 45) {
     send45(payload);
+  } else if(size < 180) {
+    uint8_t padded_payload[180];
+    
+    for(uint8_t i = 0; i < size; ++i) {
+      padded_payload[i] = payload[i];
+    }
+    
+    for(uint8_t i = size; i < 180; ++i) {
+      padded_payload[i] = 0;
+    }
+    
+    send180(padded_payload);
+  } else {
+    send180(payload);
   }
 }
 

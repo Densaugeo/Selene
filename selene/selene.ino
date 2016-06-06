@@ -1,4 +1,4 @@
-#include "Skirnir180.hpp"
+#include "Skirnir.hpp"
 #include "Selene_Device.hpp"
 #include "Selene_DOut.hpp"
 
@@ -9,7 +9,7 @@ int pb_time = 0;
 unsigned char packet_decoded[45];
 unsigned long last_ping = 0;
 
-Skirnir180 a_skirnir = Skirnir180(&Serial);
+Skirnir a_skirnir = Skirnir(&Serial);
 
 void send_with_skirnir(uint8_t payload[], uint8_t size) {
   a_skirnir.send(payload, size);

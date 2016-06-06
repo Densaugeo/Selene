@@ -27,27 +27,9 @@ class Skirnir180 : public Skirnir {
   public:
     /* Skirnir180:
      *   Description:
-     *     Same as Skirnir, but can send payloads up to 180 bytes
+     *     Same as Skirnir, but can receive 180-byte packets (at the cost of using more RAM)
      */
     Skirnir180(HardwareSerial* port);
-    
-    /* send180:
-     *   Description:
-     *     Sends a fixed-size 180-byte packet
-     *   Parameters:
-     *     payload - Bytes to send. The 180 bytes after this pointer are sent
-     */
-    void send180(uint8_t payload[]);
-    
-    /* send:
-     *   Description:
-     *     Same as Skirnir::send(), except this one can also send 180 byte packets
-     *     Smaller payloads are sent in reulgar 45-byte packets, larger ones in 180-byte packets
-     *   Parameters:
-     *     payload - Bytes to send
-     *     size - Size of payload. If size is more than 180, the first 180 bytes will be sent
-     */
-    void send(uint8_t payload[], uint32_t size);
     
     /* receive:
      *   Description:
