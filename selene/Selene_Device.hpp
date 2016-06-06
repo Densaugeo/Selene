@@ -15,9 +15,6 @@ namespace Selene {
       // Cache a packet to use for pin updates
       PinPacket pinPacket;
       
-      // If set, .sendPinUpdates() will send updates for all pins
-      bool sendAllPins = false;
-      
       // Set to true when .sendPinUpdates() detects that a pin has changed
       bool needsSave = false;
       
@@ -48,6 +45,9 @@ namespace Selene {
       
       // Size of info, in bytes
       uint8_t infoSize;
+      
+      // If set, next .sendPinUpdates() will send updates for all pins
+      bool sendAllPins = false;
       
       // Time to wait from last change before saving, in ms. Pin states are saved after all pins have remained
       // constant for this time. Setting this too low can burn out EEPROM!

@@ -18,7 +18,7 @@ namespace Selene {
   }
   
   void Device::replyToDiscovery() {
-    uint8_t new_packet[82];
+    uint8_t new_packet[155];
     Packet holder = Packet(new_packet);
     holder.initialize();
     holder.setAddress(address);
