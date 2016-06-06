@@ -59,8 +59,8 @@ Packet {
 |:--:|:--------:|:-:|:----------:|:----------:|:----|
 |1   |Discovery |No |0           |None        |When a μC receives a discovery packet, it should reply with devinfo and pininfo|
 |2   |Connection|No |1           |bool        |Indicates if a μC is connected.
-|3   |Devinfo   |No |Variable    |[u8]¹       |Payload is typically a utf8-encoded JSON string.
-|4   |Pininfo   |Yes|Variable    |[u8]¹       |Payload is typically a utf8-encoded JSON string.
+|3   |Devinfo   |No |0 - 144     |[u8]¹       |Payload is typically a utf8-encoded JSON string.
+|4   |Pininfo   |Yes|0 - 144     |[u8]¹       |Payload is typically a utf8-encoded JSON string.
 |5   |Pin       |Yes|4           |u32LE²      |Used to report pin values, or with the request flag to request a pin change.|
 
 ¹Array of 8-bit unsigned integers.
