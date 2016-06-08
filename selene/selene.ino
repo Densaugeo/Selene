@@ -5,7 +5,11 @@
 #include "Selene_DOut.hpp"
 #include "Selene_PWM.hpp"
 
-#include <EEPROM.h>
+#include "Adafruit_PWMServoDriver.h"
+#include "Selene_PCA9685.hpp"
+
+
+//#include <EEPROM.h>
 
 /*class SaveReporter : public Selene::DOut {
   public:
@@ -50,6 +54,9 @@ const PROGMEM  uint8_t devinfo_three[] = "{\"name\":\"Analog Pin\",\"desc\":\"Re
 Selene::Pin** pins_three = new Selene::Pin*[1];
 Selene::Device device_three = Selene::Device(3, pins_three, 1, devinfo_three, 55, true, &send_with_skirnir);
 
+#define PCA9685_ADDRESS 0x40
+Adafruit_PWMServoDriver pca9685 = Adafruit_PWMServoDriver(PCA9685_ADDRESS);
+
 const PROGMEM uint8_t pin_1_0_info[] = "{\"name\":\"Red\"}";
 const PROGMEM uint8_t pin_1_1_info[] = "{\"name\":\"Green\"}";
 const PROGMEM uint8_t pin_1_2_info[] = "{\"name\":\"Blue\"}";
@@ -67,7 +74,11 @@ void setup() {
   device_two.pins[0] = new Selene::DIn(7, 7, true, pin_2_7_info, 21, true);
   device_two.pins[1] = new Selene::DOut(5, 5, pin_2_5_info, 18, true);
 
+  pca9685.begin();
+  pca9685.setPWMFreq(1000);
+  
   //device_three.pins[0] = new Selene::AIn(0, 5, (uint8_t*) "{\"name\":\"V\",\"min\":0,\"max\":1023}", 31, false);
+  device_three.pins[0] = new Selene::PCA9685(0, &pca9685, 0, pin_3_0_info, 31, true);
 
   //pinMode(5, INPUT);
   //digitalWrite(5, HIGH); // Turn on pullup
