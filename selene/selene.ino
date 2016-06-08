@@ -34,25 +34,40 @@ void send_with_skirnir(uint8_t payload[], uint8_t size) {
   a_skirnir.send(payload, size);
 }
 
+const PROGMEM  uint8_t devinfo_one[]  = "{\"name\":\"Selene One\",\"desc\":\"Very first Selene device\",\"min\":0,\"max\":255}";
+
 Selene::Pin** pins = new Selene::Pin*[3];
-Selene::Device a_device = Selene::Device(1, pins, 3, (uint8_t*) "{\"name\":\"Selene One\",\"desc\":\"Very first Selene device\",\"min\":0,\"max\":255}", 73, &send_with_skirnir);
+Selene::Device a_device = Selene::Device(1, pins, 3, devinfo_one, 73, true, &send_with_skirnir);
+
+
+const PROGMEM  uint8_t devinfo_two[]  = "{\"name\":\"PB + LED\",\"min\":0,\"max\":1}";
 
 Selene::Pin** pins_two = new Selene::Pin*[2];
-Selene::Device device_two = Selene::Device(2, pins_two, 2, (uint8_t*) "{\"name\":\"PB + LED\",\"min\":0,\"max\":1}", 35, &send_with_skirnir);
+Selene::Device device_two = Selene::Device(2, pins_two, 2, devinfo_two, 35, true, &send_with_skirnir);
+
+const PROGMEM  uint8_t devinfo_three[] = "{\"name\":\"Analog Pin\",\"desc\":\"Read Voltage (out of 5V)\"}";
 
 Selene::Pin** pins_three = new Selene::Pin*[1];
-Selene::Device device_three = Selene::Device(3, pins_three, 1, (uint8_t*) "{\"name\":\"Analog Pin\",\"desc\":\"Read Voltage (out of 5V)\"}", 55, &send_with_skirnir);
+Selene::Device device_three = Selene::Device(3, pins_three, 1, devinfo_three, 55, true, &send_with_skirnir);
 
+const PROGMEM uint8_t pin_1_0_info[] = "{\"name\":\"Red\"}";
+const PROGMEM uint8_t pin_1_1_info[] = "{\"name\":\"Green\"}";
+const PROGMEM uint8_t pin_1_2_info[] = "{\"name\":\"Blue\"}";
+
+const PROGMEM uint8_t pin_2_7_info[] = "{\"name\":\"Pushbutton\"}";
+const PROGMEM uint8_t pin_2_5_info[] = "{\"name\":\"Red LED\"}";
+
+const PROGMEM uint8_t pin_3_0_info[] = "{\"name\":\"V\",\"min\":0,\"max\":4095}";
 
 void setup() {
-  a_device.pins[0] = new Selene::PWM(0, 11, (uint8_t*) "{\"name\":\"Red\"}", 14);
-  a_device.pins[1] = new Selene::PWM(1, 10, (uint8_t*) "{\"name\":\"Green\"}", 16);
-  a_device.pins[2] = new Selene::PWM(2, 9, (uint8_t*) "{\"name\":\"Blue\"}", 15);
+  a_device.pins[0] = new Selene::PWM(0, 11, pin_1_0_info, 14, true);
+  a_device.pins[1] = new Selene::PWM(1, 10, pin_1_1_info, 16, true);
+  a_device.pins[2] = new Selene::PWM(2, 9, pin_1_2_info, 15, true);
 
-  device_two.pins[0] = new Selene::DIn(7, 7, true, (uint8_t*) "{\"name\":\"Pushbutton\"}", 21);
-  device_two.pins[1] = new Selene::DOut(5, 5, (uint8_t*) "{\"name\":\"Red LED\"}", 18);
+  device_two.pins[0] = new Selene::DIn(7, 7, true, pin_2_7_info, 21, true);
+  device_two.pins[1] = new Selene::DOut(5, 5, pin_2_5_info, 18, true);
 
-  device_three.pins[0] = new Selene::AIn(0, 5, (uint8_t*) "{\"name\":\"V\",\"min\":0,\"max\":1023}", 31);
+  //device_three.pins[0] = new Selene::AIn(0, 5, (uint8_t*) "{\"name\":\"V\",\"min\":0,\"max\":1023}", 31, false);
 
   //pinMode(5, INPUT);
   //digitalWrite(5, HIGH); // Turn on pullup

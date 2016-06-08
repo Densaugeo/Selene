@@ -1,5 +1,8 @@
 #include "Selene_Device.hpp"
 
+#include <string.h>
+#include <avr/pgmspace.h>
+
 namespace Selene {
   void Device::handlePacket(uint8_t* buffer) {
     Packet packet = Packet(buffer);
@@ -25,7 +28,14 @@ namespace Selene {
     
     // Send devinfo packet
     holder.setTypeCode(Packet::DEVINFO);
-    holder.writePayload(info, infoSize);
+    holder.setPSize(infoSize);
+    
+    if(infoProgmem) {
+      memcpy_P(holder.payload(), info, infoSize);
+    } else {
+      memcpy(holder.payload(), info, infoSize);
+    }
+    
     send(holder.buffer, holder.size());
     
     holder.setTypeCode(Packet::PININFO);
@@ -35,12 +45,18 @@ namespace Selene {
       
       // And send a pininfo packet
       holder.setPin(pin -> selenePin);
-      holder.writePayload(pin -> info, pin -> infoSize);
-      send(holder.buffer, holder.size());
+      holder.setPSize(pin -> infoSize);
       
-      // And trigger pin updates
+      if(pin -> infoProgmem) {
+        memcpy_P(holder.payload(), pin -> info, pin -> infoSize);
+      } else {
+        memcpy(holder.payload(), pin -> info, pin -> infoSize);
+      }
+      
+      send(holder.buffer, holder.size());
     }
     
+    // And trigger pin updates
     sendAllPins = true;
   }
   

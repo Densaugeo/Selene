@@ -65,9 +65,4 @@ namespace Selene {
     payload()[2] = v >> 16;
     payload()[3] = v >> 24;
   }
-  
-  void Packet::writePayload(uint8_t* payload, uint8_t pSize) {
-    setPSize(pSize);
-    memcpy(Packet::payload(), payload, pSize);
-  }
 }

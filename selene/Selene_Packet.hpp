@@ -106,15 +106,6 @@ namespace Selene {
       // Payload as u32. Does not set pSize byte
       uint32_t getPayloadU32();
       void setPayloadU32(uint32_t v);
-      
-      /* writePayload:
-       *   Description:
-       *     Write a buffer into payload. Sets pSize byte
-       *   Parameters:
-       *     payload - Data to write into payload
-       *     pSize - Size of payload, in bytes
-       */
-      void writePayload(uint8_t* payload, uint8_t pSize);
   };
 }
 

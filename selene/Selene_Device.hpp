@@ -41,10 +41,13 @@ namespace Selene {
       const uint8_t len;
       
       // Info for Selene devinfo packets
-      uint8_t* info;
+      const uint8_t* info;
       
       // Size of info, in bytes
-      uint8_t infoSize;
+      const uint8_t infoSize;
+      
+      // True if .info points to a string in Arduino-style PROGMEM
+      const bool infoProgmem;
       
       // If set, next .sendPinUpdates() will send updates for all pins
       bool sendAllPins = false;
@@ -54,8 +57,8 @@ namespace Selene {
       uint32_t saveDelay = 60000;
       
       // Constructor just initializes stuff
-      Device(uint32_t address, Pin** pins, uint8_t len, uint8_t* info, uint8_t infoSize, void (*send)(uint8_t*, uint8_t)):
-      address(address), pins(pins), len(len), info(info), infoSize(infoSize), send(send), pinPacket(address) {}
+      Device(uint32_t address, Pin** pins, uint8_t len, const uint8_t* info, uint8_t infoSize, bool infoProgmem, void (*send)(uint8_t*, uint8_t)):
+      address(address), pins(pins), len(len), info(info), infoSize(infoSize), infoProgmem(infoProgmem), send(send), pinPacket(address) {}
       
       /* handlePacket:
        *   Description:

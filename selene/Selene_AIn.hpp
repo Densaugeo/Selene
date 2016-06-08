@@ -14,8 +14,8 @@ namespace Selene {
       const uint8_t arduinoPin;
       
       // Constructor sets up physical pin
-      AIn(uint8_t selenePin, uint8_t arduinoPin, uint8_t* info, uint8_t infoSize):
-      Selene::Pin(selenePin, info, infoSize), arduinoPin(arduinoPin) {}
+      AIn(uint8_t selenePin, uint8_t arduinoPin, const uint8_t* info, uint8_t infoSize, bool infoProgmem):
+      Selene::Pin(selenePin, info, infoSize, infoProgmem), arduinoPin(arduinoPin) {}
       
       uint32_t getState() {
         return analogRead(arduinoPin);
