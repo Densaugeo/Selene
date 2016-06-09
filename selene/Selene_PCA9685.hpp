@@ -4,8 +4,8 @@
 #ifndef SELENE_PCA9685_H_INCLUDED
 #define SELENE_PCA9685_H_INCLUDED
 
-#include <stdint.h>
 #include "Selene_Pin.hpp"
+#include <stdint.h>
 #include "Adafruit_PWMServoDriver.h"
 
 namespace Selene {

@@ -4,8 +4,8 @@
 #ifndef SELENE_PWM_H_INCLUDED
 #define SELENE_PWM_H_INCLUDED
 
-#include <stdint.h>
 #include "Selene_Pin.hpp"
+#include <stdint.h>
 
 namespace Selene {
   class PWM : public Pin {

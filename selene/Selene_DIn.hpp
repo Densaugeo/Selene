@@ -4,8 +4,8 @@
 #ifndef SELENE_DIN_H_INCLUDED
 #define SELENE_DIN_H_INCLUDED
 
-#include <stdint.h>
 #include "Selene_Pin.hpp"
+#include <stdint.h>
 
 namespace Selene {
   class DIn : public Pin {

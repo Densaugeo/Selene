@@ -5,6 +5,7 @@
 #define SELENE_PINPACKET_H_INCLUDED
 
 #include <stdint.h>
+#include <string.h>
 
 namespace Selene {
   class PinPacket {
@@ -18,7 +19,14 @@ namespace Selene {
        *   Parameters:
        *     address - Selene address
        */
-      PinPacket(uint32_t address);
+      PinPacket(uint32_t address) {
+        // Initializing buffer here saves dynamic memory
+        buffer[0] = 'S';
+        setAddress(address);
+        buffer[5] = 5;
+        memset(buffer + 6, 0, 9);
+        buffer[10] = 4;
+      }
       
       /* size:
        *   Description:
@@ -32,7 +40,12 @@ namespace Selene {
        *   Description:
        *     Sets Selene address
        */
-      void setAddress(uint32_t v);
+      void setAddress(uint32_t v) {
+        buffer[1] = v;
+        buffer[2] = v >> 8;
+        buffer[3] = v >> 16;
+        buffer[4] = v >> 24;
+      }
       
       /* setPin:
        *   Description:
@@ -44,7 +57,12 @@ namespace Selene {
        *   Description:
        *     Sets payload using a u32
        */
-      void setPayloadU32(uint32_t v);
+      void setPayloadU32(uint32_t v) {
+        buffer[11] = v;
+        buffer[12] = v >> 8;
+        buffer[13] = v >> 16;
+        buffer[14] = v >> 24;
+      }
   };
 }
 

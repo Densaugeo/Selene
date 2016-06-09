@@ -17,7 +17,13 @@ namespace Selene {
        *   Returns:
        *     true if type should have a pin field
        */
-      bool type_has_pin(uint8_t type);
+      bool type_has_pin(uint8_t type) {
+        switch(type) {
+          case 4: return true;
+          case 5: return true;
+          default: return false;
+        }
+      }
       
       /* type_size:
        *   Description:
@@ -27,7 +33,14 @@ namespace Selene {
        *   Returns:
        *     Size of payload, in bytes
        */
-      uint8_t type_p_size(uint8_t type);
+      uint8_t type_p_size(uint8_t type) {
+        switch(type) {
+          case 1: return 0;
+          case 2: return 1;
+          case 5: return 4;
+          default: return -1;
+        }
+      }
     
     public:
       // Selene packet types
@@ -57,7 +70,10 @@ namespace Selene {
        *     Initialize packet with prefix and zeroes for other fields. Will need to given
        *     address, type, pin (if applicable), and payload before use
        */
-      void initialize();
+      void initialize() {
+        Packet::buffer[0] = 'S';
+        memset(Packet::buffer + 1, 0, 10);
+      }
       
       /* validate:
        *   Description:
@@ -65,7 +81,16 @@ namespace Selene {
        *   Returns:
        *     true if valid
        */
-      bool validate();
+      bool validate() {
+        if(buffer[0] != 'S') return false;
+        if(getTypeCode() == 0 || getTypeCode() > 5) return false;
+        if(!type_has_pin(getTypeCode()) && getPin()) return false;
+        if(buffer[7] & 0x7F) return false;
+        if(buffer[8] || buffer[9]) return false;
+        if(type_p_size(getTypeCode()) != -1 && type_p_size(getTypeCode()) != getPSize()) return false;
+        
+        return true;
+      }
       
       /* size:
        *   Description:
@@ -76,12 +101,27 @@ namespace Selene {
       uint8_t size() { return 11 + getPSize(); }
       
       // Selene address
-      uint32_t getAddress();
-      void setAddress(uint32_t v);
+      uint32_t getAddress() {
+        return (buffer[4] << 24) | (buffer[3] << 16) | (buffer[2] << 8) | buffer[1];
+      }
+      
+      void setAddress(uint32_t v) {
+        buffer[1] = v;
+        buffer[2] = v >> 8;
+        buffer[3] = v >> 16;
+        buffer[4] = v >> 24;
+      }
       
       // Selene type (by type code). Setting a type with a fixed payload size sets pSize byte
       TypeCode getTypeCode() { return (TypeCode) buffer[5]; }
-      void setTypeCode(TypeCode v);
+      
+      void setTypeCode(TypeCode v) {
+        buffer[5] = v;
+        
+        if(type_p_size(v) != -1) {
+          buffer[10] = type_p_size(v);
+        }
+      }
       
       // Selene pin #
       uint8_t getPin() { return buffer[6]; }
@@ -104,8 +144,16 @@ namespace Selene {
       uint8_t* payload() { return buffer + 11; }
       
       // Payload as u32. Does not set pSize byte
-      uint32_t getPayloadU32();
-      void setPayloadU32(uint32_t v);
+      uint32_t getPayloadU32() {
+        return (buffer[14] << 24) | (buffer[13] << 16) | (buffer[12] << 8) | buffer[11];
+      }
+      
+      void setPayloadU32(uint32_t v) {
+        payload()[0] = v;
+        payload()[1] = v >> 8;
+        payload()[2] = v >> 16;
+        payload()[3] = v >> 24;
+      }
   };
 }
 
