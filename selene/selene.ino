@@ -28,7 +28,6 @@
 
 int pb_previous = 0;
 int pb_time = 0;*/
-uint8_t packet_decoded[45];
 uint16_t last_ping = 0;
 uint16_t last_analog = 0;
 
@@ -97,10 +96,10 @@ void loop() {
   }
 
   // Returns true if a valid packet is found
-  if(a_skirnir.receive_until_packet(packet_decoded)) {
-    a_device.handlePacket(packet_decoded);
-    device_two.handlePacket(packet_decoded);
-    device_three.handlePacket(packet_decoded);
+  if(a_skirnir.receiveUntilPacket()) {
+    a_device.handlePacket(a_skirnir.receiveBuffer);
+    device_two.handlePacket(a_skirnir.receiveBuffer);
+    device_three.handlePacket(a_skirnir.receiveBuffer);
   }
 
   /*if(!digitalRead(5) == 0) {
