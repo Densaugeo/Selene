@@ -102,7 +102,7 @@ namespace Selene {
       
       // Selene address
       uint32_t getAddress() {
-        return (buffer[4] << 24) | (buffer[3] << 16) | (buffer[2] << 8) | buffer[1];
+        return ((uint32_t) buffer[4] << 24) | ((uint32_t) buffer[3] << 16) | ((uint32_t) buffer[2] << 8) | buffer[1];
       }
       
       void setAddress(uint32_t v) {
@@ -145,7 +145,7 @@ namespace Selene {
       
       // Payload as u32. Does not set pSize byte
       uint32_t getPayloadU32() {
-        return (buffer[14] << 24) | (buffer[13] << 16) | (buffer[12] << 8) | buffer[11];
+        return ((uint32_t) buffer[14] << 24) | ((uint32_t) buffer[13] << 16) | ((uint32_t) buffer[12] << 8) | buffer[11];
       }
       
       void setPayloadU32(uint32_t v) {
