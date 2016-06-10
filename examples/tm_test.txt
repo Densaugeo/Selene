@@ -1,0 +1,44 @@
+int freeRam () {
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
+
+uint32_t time = micros();
+
+
+
+uint8_t reporter_buffer[45];
+
+time = micros() - time;
+uint32_t memory = freeRam();
+
+reporter_buffer[0] = 'M';
+reporter_buffer[1] = time;
+reporter_buffer[2] = time >> 8;
+reporter_buffer[3] = time >> 16;
+reporter_buffer[4] = time >> 24;
+reporter_buffer[5] = memory;
+reporter_buffer[6] = memory >> 8;
+reporter_buffer[7] = memory >> 16;
+reporter_buffer[8] = memory >> 24;
+
+port -> write('#');
+
+for(uint8_t i = 0; i < 9; i += 3) {
+  encode_base64(reporter_buffer + i, 3, send_buffer);
+  port -> write((char*) send_buffer);
+}
+
+for(uint8_t i = 12; i < 60; ++i) {
+  port -> write('A');
+}
+
+port -> write('\n');
+
+
+In relay.js, parse Skirnir packet with:
+
+var time = buffer.readUInt32LE(1);
+var memory = buffer.readUInt32LE(5);
+console.log('Time: ' + time + '\n' + 'Memory: ' + memory);
