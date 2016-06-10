@@ -212,7 +212,7 @@ var darkColors = document.getElementById('dark_colors');
 /**
  * @module mqtt_to_server
  */
-var mqtt_to_server = mqtt.connect('ws://localhost:8883');
+var mqtt_to_server = mqtt.connect(window.location.protocol.replace('http', 'ws') + '//' + window.location.hostname + ':8883');
 
 var subscriptions = ['Se/+/devinfo'];
 
