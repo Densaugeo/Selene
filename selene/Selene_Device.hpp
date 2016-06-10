@@ -84,7 +84,7 @@ namespace Selene {
        *     pinNumber - Selene pin #
        *     state - Requested state
        */
-      void pinRequest(uint8_t pinNumber, uint32_t state);
+      virtual void pinRequest(uint8_t pinNumber, uint32_t state);
       
       /* sendPinUpdates:
        *   Description:
