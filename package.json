@@ -42,7 +42,7 @@
     "mqtt": "~1.11.0",
     "nconf": "~0.8.4",
     "node-static": "~0.7.7",
-    "skirnir": "git://github.com/Densaugeo/Skirnir.git#1.1.0",
+    "skirnir": "git://github.com/Densaugeo/Skirnir.git#2.0.0",
     "winston": "~2.2.0"
   },
   "devDependencies": {},
