@@ -13,7 +13,6 @@
   "files": [
     "LICENSE",
     "package.json",
-    "packets.md",
     "README.md",
     "server.js"
   ],
@@ -23,12 +22,10 @@
     "url": "https://github.com/Densaugeo/Selene.git"
   },
   "scripts": {
-    "lint": "jshint *.js",
-    "test": "mocha test/SeleneParser.js"
+    "lint": "jshint *.js"
   },
   "config": {},
   "dependencies": {
-    "mocha": "^2.4.5",
     "mosca": "^1.2.0",
     "nconf": "~0.8.4",
     "winston": "~2.2.0"
